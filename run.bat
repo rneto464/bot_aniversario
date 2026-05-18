@@ -1,0 +1,6 @@
+@echo off
+echo Instalando dependencias...
+pip install -r requirements.txt
+echo Iniciando o Bot de Aniversarios...
+python app.py
+pause

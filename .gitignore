@@ -1,0 +1,42 @@
+# Variáveis de ambiente (NUNCA subir para o GitHub)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+package-lock.json
+
+# Banco de dados local
+*.db
+*.sqlite3
+
+# Imagens de upload (opcional, descomente se quiser ignorar)
+# imagens_aniversario/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# SO
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
