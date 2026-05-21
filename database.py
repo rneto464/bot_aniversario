@@ -99,7 +99,7 @@ def get_configuracoes():
 
 def update_configuracoes(smtp_server, smtp_port, email_user, email_pass, mensagem_padrao, whatsapp_group_id=""):
     if not SUPABASE_URL: return
-    url = f"{SUPABASE_URL}/rest/v1/configuracoes"
+    url = f"{SUPABASE_URL}/rest/v1/configuracoes?on_conflict=id"
     payload = {
         "id": 1,
         "smtp_server": smtp_server,
@@ -111,7 +111,9 @@ def update_configuracoes(smtp_server, smtp_port, email_user, email_pass, mensage
     }
     # Usa Upsert para criar se não existir ou atualizar se existir
     headers = get_headers("resolution=merge-duplicates")
-    requests.post(url, headers=headers, json=payload)
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code not in (200, 201, 204):
+        print(f"ERRO AO SALVAR CONFIGURAÇÕES NO SUPABASE: {response.status_code} - {response.text}")
 
 # --- Funções de Imagens ---
 

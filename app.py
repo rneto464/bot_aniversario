@@ -99,13 +99,20 @@ def obter_configuracoes():
 @app.route('/api/configuracoes', methods=['POST'])
 def salvar_configuracoes():
     data = request.json
+    
+    # Limpar espaços em branco acidentais (muito comum ao copiar e colar)
+    email_user = data.get('email_user', '').strip()
+    email_pass = data.get('email_pass', '').strip().replace(' ', '') # Remove espaços internos da senha de app do Google
+    smtp_server = data.get('smtp_server', 'smtp.gmail.com').strip()
+    whatsapp_group_id = data.get('whatsapp_group_id', '').strip()
+
     update_configuracoes(
-        data.get('smtp_server', 'smtp.gmail.com'),
+        smtp_server,
         int(data.get('smtp_port', 587)),
-        data.get('email_user', ''),
-        data.get('email_pass', ''),
+        email_user,
+        email_pass,
         data.get('mensagem_padrao', ''),
-        data.get('whatsapp_group_id', '')
+        whatsapp_group_id
     )
     return jsonify({'message': 'Configurações salvas'})
 

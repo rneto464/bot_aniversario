@@ -1,5 +1,5 @@
+flask
 schedule
-pywhatkit
-customtkinter
 requests
 python-dotenv
+supabase

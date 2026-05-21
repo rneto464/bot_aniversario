@@ -1,0 +1,12 @@
+# Dependências instaladas (geradas pelo npm install)
+node_modules/
+
+# Tokens da sessão WhatsApp (não subir para o GitHub — contém dados de autenticação)
+wpp-tokens/
+
+# Arquivos de imagem temporários usados no envio
+tmp/
+
+# Logs
+*.log
+npm-debug.log*

@@ -2,10 +2,21 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
-from datetime import datetime
 import os
+import requests
+from dotenv import load_dotenv
 
+load_dotenv()
+
+# URL base da API WPPConnect (microserviço Node.js)
+WPP_API_URL = os.getenv("WPP_API_URL", "http://localhost:3000")
+
+
+# ──────────────────────────────────────────────────────────────
+# E-MAIL
+# ──────────────────────────────────────────────────────────────
 def enviar_email(to_email, subject, body, smtp_server, smtp_port, email_user, email_pass, caminho_imagem=None):
+    """Envia um e-mail com texto e, opcionalmente, uma imagem em anexo."""
     try:
         msg = MIMEMultipart()
         msg['From'] = email_user
@@ -23,72 +34,89 @@ def enviar_email(to_email, subject, body, smtp_server, smtp_port, email_user, em
         server = smtplib.SMTP(smtp_server, smtp_port)
         server.starttls()
         server.login(email_user, email_pass)
-        text = msg.as_string()
-        server.sendmail(email_user, to_email, text)
+        server.sendmail(email_user, to_email, msg.as_string())
         server.quit()
         return True, "E-mail enviado com sucesso"
     except Exception as e:
         return False, str(e)
 
-import time
-import webbrowser
-import pyautogui
-import pyperclip
 
-def copy_image_to_clipboard(filepath):
-    import win32clipboard
-    from PIL import Image
-    from io import BytesIO
-    image = Image.open(filepath)
-    output = BytesIO()
-    image.convert("RGB").save(output, "BMP")
-    data = output.getvalue()[14:]
-    output.close()
-    win32clipboard.OpenClipboard()
-    win32clipboard.EmptyClipboard()
-    win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
-    win32clipboard.CloseClipboard()
+# ──────────────────────────────────────────────────────────────
+# WHATSAPP (via WPPConnect API)
+# ──────────────────────────────────────────────────────────────
+def _checar_status_wpp():
+    """Verifica se o microserviço WPPConnect está online e conectado."""
+    try:
+        resp = requests.get(f"{WPP_API_URL}/status", timeout=5)
+        data = resp.json()
+        return data.get("status") == "connected"
+    except requests.exceptions.ConnectionError:
+        return False
 
-def _enviar_mensagem_robusta(url, mensagem, caminho_imagem=None):
-    webbrowser.open(url)
-    time.sleep(25) # Espera o WhatsApp Web carregar completamente
-    
-    # Clica no centro da tela para focar (ajuda no Windows)
-    width, height = pyautogui.size()
-    pyautogui.click(width / 2, height / 2)
-    time.sleep(1)
-    
-    if caminho_imagem and os.path.exists(caminho_imagem):
-        # Envia a imagem copiando para a área de transferência
-        copy_image_to_clipboard(caminho_imagem)
-        pyautogui.hotkey('ctrl', 'v')
-        time.sleep(3) # Espera a pré-visualização da imagem carregar
-        
-    # Copia o texto para a área de transferência (resolve 100% o problema dos acentos)
-    pyperclip.copy(mensagem)
-    pyautogui.hotkey('ctrl', 'v')
-    time.sleep(1)
-    
-    # Envia a mensagem
-    pyautogui.press('enter')
-    time.sleep(2) # Espera enviar antes de retornar
 
 def enviar_whatsapp(numero, mensagem, caminho_imagem=None):
+    """
+    Envia uma mensagem (e opcionalmente uma imagem) para um número via WhatsApp.
+    Requer que o microserviço wpp-api/server.js esteja rodando.
+    """
     try:
-        numero = str(numero).replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
-        if not numero.startswith("+"):
-            numero = "+55" + numero
-            
-        url = f"https://web.whatsapp.com/send?phone={numero}"
-        _enviar_mensagem_robusta(url, mensagem, caminho_imagem)
-        return True, "WhatsApp enviado com sucesso"
+        if not _checar_status_wpp():
+            return False, "WPPConnect não está conectado. Inicie o servidor wpp-api e escaneie o QR Code."
+
+        endpoint = f"{WPP_API_URL}/send"
+
+        if caminho_imagem and os.path.exists(caminho_imagem):
+            # Envia como multipart/form-data com a imagem
+            with open(caminho_imagem, 'rb') as img_file:
+                files = {'imagem': (os.path.basename(caminho_imagem), img_file, 'image/jpeg')}
+                data = {'numero': str(numero), 'mensagem': mensagem}
+                resp = requests.post(endpoint, data=data, files=files, timeout=30)
+        else:
+            # Envia apenas texto como JSON
+            payload = {'numero': str(numero), 'mensagem': mensagem}
+            resp = requests.post(endpoint, json=payload, timeout=30)
+
+        resultado = resp.json()
+        if resultado.get("sucesso"):
+            return True, resultado.get("mensagem", "WhatsApp enviado com sucesso")
+        else:
+            return False, resultado.get("erro", "Erro desconhecido na API WPP")
+
+    except requests.exceptions.ConnectionError:
+        return False, "Não foi possível conectar ao microserviço WPPConnect. Verifique se ele está rodando na porta 3000."
     except Exception as e:
         return False, str(e)
 
+
 def enviar_whatsapp_grupo(group_id, mensagem, caminho_imagem=None):
+    """
+    Envia uma mensagem (e opcionalmente uma imagem) para um grupo do WhatsApp.
+    O group_id deve ser o ID interno do grupo (ex: 5511999998888-1234567890@g.us)
+    ou apenas a parte numérica.
+    Requer que o microserviço wpp-api/server.js esteja rodando.
+    """
     try:
-        url = f"https://web.whatsapp.com/accept?code={group_id}"
-        _enviar_mensagem_robusta(url, mensagem, caminho_imagem)
-        return True, "WhatsApp enviado para o grupo com sucesso"
+        if not _checar_status_wpp():
+            return False, "WPPConnect não está conectado. Inicie o servidor wpp-api e escaneie o QR Code."
+
+        endpoint = f"{WPP_API_URL}/send-group"
+
+        if caminho_imagem and os.path.exists(caminho_imagem):
+            with open(caminho_imagem, 'rb') as img_file:
+                files = {'imagem': (os.path.basename(caminho_imagem), img_file, 'image/jpeg')}
+                data = {'group_id': str(group_id), 'mensagem': mensagem}
+                resp = requests.post(endpoint, data=data, files=files, timeout=30)
+        else:
+            payload = {'group_id': str(group_id), 'mensagem': mensagem}
+            resp = requests.post(endpoint, json=payload, timeout=30)
+
+        resultado = resp.json()
+        if resultado.get("sucesso"):
+            return True, resultado.get("mensagem", "WhatsApp enviado para o grupo com sucesso")
+        else:
+            return False, resultado.get("erro", "Erro desconhecido na API WPP")
+
+    except requests.exceptions.ConnectionError:
+        return False, "Não foi possível conectar ao microserviço WPPConnect. Verifique se ele está rodando na porta 3000."
     except Exception as e:
         return False, str(e)
