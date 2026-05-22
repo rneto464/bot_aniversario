@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: bot-aniversario
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 1 --threads 2
+    envVars:
+      - key: SUPABASE_URL
+        value: https://dvvhecqfasrzursmgkxp.supabase.co
+      - key: SUPABASE_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: WPP_API_URL
+        value: http://localhost:3000

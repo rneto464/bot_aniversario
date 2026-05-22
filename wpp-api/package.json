@@ -1,0 +1,15 @@
+{
+  "name": "wpp-api",
+  "version": "1.0.0",
+  "description": "Microserviço headless para envio de WhatsApp via WPPConnect",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@wppconnect-team/wppconnect": "^1.32.0",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@wppconnect-team/wppconnect": "^2.1.0",
+    "node": "^22.22.3",
+    "server.js": "^1.0.0"
+  }
+}

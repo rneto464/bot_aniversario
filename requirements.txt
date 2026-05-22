@@ -1,0 +1,6 @@
+flask
+schedule
+requests
+python-dotenv
+supabase
+gunicorn
