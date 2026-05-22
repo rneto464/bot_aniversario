@@ -24,7 +24,9 @@ def init_db():
 # --- Funções de Colaboradores ---
 
 def add_colaborador(nome, data_nascimento, email, telefone):
-    if not SUPABASE_URL: return None
+    if not SUPABASE_URL:
+        print("ERRO: SUPABASE_URL não definida")
+        return None
     url = f"{SUPABASE_URL}/rest/v1/colaboradores"
     payload = {
         "nome": nome,
@@ -33,6 +35,7 @@ def add_colaborador(nome, data_nascimento, email, telefone):
         "telefone": telefone
     }
     response = requests.post(url, headers=get_headers(), json=payload)
+    print(f"[Supabase] POST colaboradores → status={response.status_code} body={response.text}")
     if response.status_code in (200, 201) and response.json():
         return response.json()[0]['id']
     return None
