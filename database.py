@@ -17,7 +17,7 @@ def get_headers(prefer="return=representation"):
     }
 
 def init_db():
-    # Ao usar a API REST, consideramos que as tabelas já foram 
+    # Ao usar a API REST, consideramos que as tabelas já foram
     # criadas manualmente via Painel do Supabase.
     pass
 
@@ -66,12 +66,12 @@ def get_aniversariantes_hoje():
     hoje = datetime.now()
     dia = f"{hoje.day:02d}"
     mes = f"{hoje.month:02d}"
-    
+
     if not SUPABASE_URL: return []
     url = f"{SUPABASE_URL}/rest/v1/colaboradores"
     response = requests.get(url, headers=get_headers())
     aniversariantes = []
-    
+
     if response.status_code == 200:
         todos = response.json()
         for c in todos:
@@ -109,7 +109,6 @@ def update_configuracoes(smtp_server, smtp_port, email_user, email_pass, mensage
         "mensagem_padrao": mensagem_padrao,
         "whatsapp_group_id": whatsapp_group_id
     }
-    # Usa Upsert para criar se não existir ou atualizar se existir
     headers = get_headers("resolution=merge-duplicates")
     response = requests.post(url, headers=headers, json=payload)
     if response.status_code not in (200, 201, 204):
