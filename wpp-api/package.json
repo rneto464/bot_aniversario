@@ -1,15 +1,18 @@
 {
   "name": "wpp-api",
-  "version": "1.0.0",
-  "description": "Microserviço headless para envio de WhatsApp via WPPConnect",
+  "version": "2.0.0",
+  "description": "Microserviço WhatsApp via Baileys",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"
   },
   "dependencies": {
-    "@wppconnect-team/wppconnect": "^1.32.0",
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.7.9",
     "express": "^4.18.2",
-    "multer": "^1.4.5-lts.1"
+    "multer": "^1.4.5-lts.1",
+    "pino": "^8.15.0",
+    "qrcode-terminal": "^0.12.0"
   }
 }

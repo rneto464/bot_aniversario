@@ -1,8 +1,9 @@
 # Dependências instaladas (geradas pelo npm install)
 node_modules/
 
-# Tokens da sessão WhatsApp (não subir para o GitHub — contém dados de autenticação)
+# Sessão do WhatsApp (não subir para o GitHub — contém dados de autenticação)
 wpp-tokens/
+baileys-auth/
 
 # Arquivos de imagem temporários usados no envio
 tmp/

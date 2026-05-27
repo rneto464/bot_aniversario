@@ -27,6 +27,15 @@ def add_colaborador(nome, data_nascimento, email, telefone):
     if not SUPABASE_URL:
         print("ERRO: SUPABASE_URL não definida")
         return None
+
+    # Verifica se já existe colaborador com mesmo nome e data de nascimento
+    check_url = f"{SUPABASE_URL}/rest/v1/colaboradores?nome=eq.{requests.utils.quote(nome)}&data_nascimento=eq.{requests.utils.quote(data_nascimento)}&select=id"
+    check = requests.get(check_url, headers=get_headers())
+    if check.status_code == 200 and check.json():
+        existing_id = check.json()[0]['id']
+        print(f"[Supabase] Colaborador '{nome}' já existe (id={existing_id}), ignorando inserção duplicada.")
+        return existing_id
+
     url = f"{SUPABASE_URL}/rest/v1/colaboradores"
     payload = {
         "nome": nome,

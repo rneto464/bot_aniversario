@@ -15,6 +15,7 @@ class BotAniversario:
         self.thread = None
         self.update_log_callback = update_log_callback
         self.logs = []
+        self._em_execucao = False
         
     def log(self, mensagem):
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -30,6 +31,10 @@ class BotAniversario:
             print(msg_formatada)
 
     def rotina_diaria(self):
+        if self._em_execucao:
+            self.log("[BOT] Rotina já está em execução, ignorando chamada duplicada.")
+            return
+        self._em_execucao = True
         self.log("[BOT] Iniciando verificação diária de aniversários...")
         try:
             aniversariantes = get_aniversariantes_hoje()
@@ -83,14 +88,16 @@ class BotAniversario:
                     else:
                         self.log(f"  -> Erro ao enviar e-mail: {msg_retorno}")
                 
-                # Enviar WhatsApp para o Grupo
-                if whatsapp_group_id and whatsapp_group_id.strip():
-                    self.log(f"  -> Enviando WhatsApp para o grupo ({whatsapp_group_id})...")
-                    sucesso, msg_retorno = enviar_whatsapp_grupo(whatsapp_group_id, mensagem, caminho_imagem)
-                    if sucesso:
-                        self.log("  -> WhatsApp processado com sucesso!")
-                    else:
-                        self.log(f"  -> Erro ao enviar WhatsApp: {msg_retorno}")
+                # Enviar WhatsApp para os Grupos
+                grupos = [g.strip() for g in whatsapp_group_id.replace('\n', ',').split(',') if g.strip()] if whatsapp_group_id else []
+                if grupos:
+                    for group_id in grupos:
+                        self.log(f"  -> Enviando WhatsApp para o grupo ({group_id})...")
+                        sucesso, msg_retorno = enviar_whatsapp_grupo(group_id, mensagem, caminho_imagem)
+                        if sucesso:
+                            self.log(f"  -> WhatsApp enviado com sucesso para ({group_id})!")
+                        else:
+                            self.log(f"  -> Erro ao enviar para ({group_id}): {msg_retorno}")
                 else:
                     self.log("  -> Pulo: Nenhum Grupo do WhatsApp configurado nas configurações.")
                     
@@ -102,13 +109,15 @@ class BotAniversario:
                         self.log(f"[DEBUG] Erro ao excluir imagem temporária: {e}")
                         
             self.log("[BOT] Verificação diária concluída.")
-            
+
         except Exception as e:
             self.log(f"[BOT] Erro na rotina: {e}")
             traceback.print_exc()
+        finally:
+            self._em_execucao = False
 
     def _loop(self):
-        # Configurar para rodar todo dia às 09:00
+        schedule.clear()  # Garante que não há jobs duplicados de execuções anteriores
         schedule.every().day.at("09:00").do(self.rotina_diaria)
         
         self.log("[BOT] Bot iniciado. Agendado para rodar às 09:00 diariamente.")
