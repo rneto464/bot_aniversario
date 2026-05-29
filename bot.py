@@ -57,6 +57,43 @@ class BotAniversario:
             img_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "imagens_aniversario"))
             self.log(f"[DEBUG] Procurando imagens em: {img_dir}")
 
+            # Enviar e-mail de lembrete para o dono da conta
+            if email_user and email_pass:
+                nomes = [c[1] for c in aniversariantes]
+                if len(nomes) == 1:
+                    lista_nomes = nomes[0]
+                else:
+                    lista_nomes = ", ".join(nomes[:-1]) + f" e {nomes[-1]}"
+
+                linhas_detalhes = ""
+                for c in aniversariantes:
+                    _, nome_c, data_nasc_c, email_c, telefone_c = c
+                    linhas_detalhes += f"  • {nome_c}"
+                    if email_c:
+                        linhas_detalhes += f" (e-mail: {email_c})"
+                    if telefone_c:
+                        linhas_detalhes += f" (telefone: {telefone_c})"
+                    linhas_detalhes += "\n"
+
+                assunto_lembrete = f"🎂 Lembrete: {lista_nomes} faz{'em' if len(nomes) > 1 else ''} aniversário hoje!"
+                corpo_lembrete = (
+                    f"Olá!\n\n"
+                    f"Este é um lembrete automático do Bot de Aniversário.\n\n"
+                    f"Hoje, {time.strftime('%d/%m/%Y')}, {'fazem' if len(nomes) > 1 else 'faz'} aniversário:\n\n"
+                    f"{linhas_detalhes}\n"
+                    f"Não esqueça de enviar suas mensagens de parabéns! 🎉\n\n"
+                    f"— Bot de Aniversário"
+                )
+                self.log(f"[BOT] Enviando e-mail de lembrete para {email_user}...")
+                sucesso_lembrete, msg_lembrete = enviar_email(
+                    email_user, assunto_lembrete, corpo_lembrete,
+                    smtp_server, smtp_port, email_user, email_pass
+                )
+                if sucesso_lembrete:
+                    self.log("  -> Lembrete enviado com sucesso!")
+                else:
+                    self.log(f"  -> Erro ao enviar lembrete: {msg_lembrete}")
+
             for colab in aniversariantes:
                 colab_id, nome, data_nasc, email, telefone = colab
                 mensagem = mensagem_padrao.format(nome=nome)
