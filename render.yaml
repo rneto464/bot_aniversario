@@ -1,5 +1,19 @@
 services:
   - type: web
+    name: bot-aniversario-wpp
+    runtime: node
+    rootDir: wpp-api
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: SUPABASE_URL
+        value: https://dvvhecqfasrzursmgkxp.supabase.co
+      - key: SUPABASE_KEY
+        sync: false
+      - key: WPP_PORT
+        value: 3000
+
+  - type: web
     name: bot-aniversario
     runtime: python
     buildCommand: pip install -r requirements.txt
@@ -12,4 +26,4 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: WPP_API_URL
-        value: http://localhost:3000
+        sync: false
